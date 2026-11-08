@@ -40,6 +40,17 @@
 
     .rank { font-weight: bold; width: 48px; color: #a0aec0; }
     .name { font-weight: 600; }
+    /* ---- ดาวรุ่ง ---- */
+    .highlights { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 24px; }
+    .highlights:empty { display: none; }
+    .hl {
+      flex: 1; min-width: 200px; background: #1e2130;
+      border: 1px solid #2d3748; border-radius: 12px; padding: 12px 16px;
+    }
+    .hl-title { color: #a0aec0; font-size: 12px; margin-bottom: 6px; }
+    .hl-name { font-weight: 700; font-size: 16px; word-break: break-word; }
+    .hl-val { color: #48bb78; font-weight: 700; font-size: 14px; margin-top: 2px; }
+
     /* ---- โพเดียม ---- */
     .podium {
       display: flex; align-items: flex-end; justify-content: center;
@@ -103,6 +114,7 @@
     <p id="status">กำลังโหลดคะแนน...</p>
 
     <div id="podium" class="podium"></div>
+    <div id="highlights" class="highlights"></div>
 
     <table>
       <thead>
@@ -214,6 +226,7 @@
       tbody.innerHTML = "";
       message.innerHTML = "";
       document.getElementById("podium").innerHTML = "";
+      document.getElementById("highlights").innerHTML = "";
 
       if (students.length === 0) {
         message.innerHTML = '<div class="message">ยังไม่มีข้อมูล เพิ่มชื่อนักเรียนในชีตได้เลย</div>';
@@ -243,6 +256,30 @@
             <div class="block">${medals[r]}</div>
           </div>`;
       }).join("");
+
+      // ดาวรุ่ง: คะแนนเพิ่มมากสุด และไต่อันดับขึ้นมากสุด (เทียบกับ prev_points)
+      const nameList = list =>
+        list.slice(0, 3).map(x => esc(x.nickname)).join(", ") +
+        (list.length > 3 ? ` และอีก ${list.length - 3} คน` : "");
+      const hlCard = (icon, title, list, value) => `
+        <div class="hl">
+          <div class="hl-title">${icon} ${title}</div>
+          <div class="hl-name">${nameList(list)}</div>
+          <div class="hl-val">${value}</div>
+        </div>`;
+
+      const maxGain = Math.max(...students.map(x => x.points - x.prevPoints));
+      const maxUp   = Math.max(...students.map(x => prevRanks.get(x) - nowRanks.get(x)));
+      const cards = [];
+      if (maxGain > 0) {
+        cards.push(hlCard("🚀", "คะแนนพุ่งสุด",
+          students.filter(x => x.points - x.prevPoints === maxGain), `+${maxGain} คะแนน`));
+      }
+      if (maxUp > 0) {
+        cards.push(hlCard("📈", "ไต่อันดับสูงสุด",
+          students.filter(x => prevRanks.get(x) - nowRanks.get(x) === maxUp), `▲ ${maxUp} อันดับ`));
+      }
+      document.getElementById("highlights").innerHTML = cards.join("");
 
       sorted.forEach(s => {
         const rank = nowRanks.get(s);
