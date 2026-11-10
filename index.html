@@ -40,6 +40,26 @@
 
     .rank { font-weight: bold; width: 48px; color: #a0aec0; }
     .name { font-weight: 600; }
+    /* ---- กติกา ---- */
+    .rules {
+      background: #1e2130; border: 1px solid #2d3748;
+      border-radius: 12px; margin: 0 0 24px;
+    }
+    .rules summary {
+      cursor: pointer; padding: 12px 16px; font-weight: 600;
+      list-style: none; display: flex; justify-content: space-between; align-items: center;
+    }
+    .rules summary::-webkit-details-marker { display: none; }
+    .rules summary::after { content: "▾"; color: #a0aec0; }
+    .rules[open] summary::after { content: "▴"; }
+    .rules ul { list-style: none; padding: 0 16px 12px; }
+    .rules li {
+      display: flex; justify-content: space-between; gap: 12px;
+      padding: 8px 0; border-top: 1px solid #2d3748;
+    }
+    .rules .pts { color: #00d4aa; font-weight: 700; white-space: nowrap; }
+    .rules .pts.neg { color: #f56565; }
+
     /* ---- ดาวรุ่ง ---- */
     .highlights { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 24px; }
     .highlights:empty { display: none; }
@@ -116,6 +136,11 @@
     <div id="podium" class="podium"></div>
     <div id="highlights" class="highlights"></div>
 
+    <details id="rules" class="rules" hidden>
+      <summary>📋 ได้คะแนนยังไงบ้าง?</summary>
+      <ul id="rules-list"></ul>
+    </details>
+
     <table>
       <thead>
         <tr>
@@ -136,6 +161,19 @@
     // ลิงก์ CSV จาก Google Sheets (publish to web)
     // ============================================
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdvKXRHXP6B8iza1lYJqyUSFwu9UjKJetmzpbx9rQESCV93harRaptsKxy7jdpr5sYzT2mzhIHu2Nq/pub?output=csv";
+
+    // ============================================
+    // กติกาการได้คะแนน  ← แก้ตรงนี้ได้เลย
+    // (ตัวอย่างเท่านั้น ปรับให้ตรงกับของจริงก่อนแจกลิงก์)
+    // ถ้าเว้นว่าง [] กล่องกติกาจะไม่แสดง
+    // ============================================
+    const RULES = [
+      { text: "ตอบคำถามได้",   points: "+2" },
+      { text: "มาเรียน",        points: "+1" },
+      { text: "อธิบายได้",      points: "+3" },
+      { text: "คุยเล่น",        points: "-3" },
+      { text: "ไม่ส่งงาน",      points: "-2" },
+    ];
 
     // ============================================
     // แปลงข้อความ CSV เป็น array ของแถว
@@ -332,6 +370,16 @@
       }
     }
 
+    function renderRules() {
+      const box = document.getElementById("rules");
+      if (!RULES.length) return;
+      document.getElementById("rules-list").innerHTML = RULES.map(r =>
+        `<li><span>${esc(r.text)}</span><span class="pts${String(r.points).trim().startsWith("-") ? " neg" : ""}">${esc(r.points)}</span></li>`
+      ).join("");
+      box.hidden = false;
+    }
+
+    renderRules();
     loadScores();
     setInterval(loadScores, 60000); // รีเฟรชเองทุก 1 นาที
   </script>
